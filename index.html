@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCNet — a private Minecraft launcher</title>
+<meta name="description" content="MCNet is a custom Minecraft launcher and Fabric mod built for one small private community.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d12;
+    --bg-grid: rgba(124,92,255,.05);
+    --surface:#14161d;
+    --surface2:#191b24;
+    --border:#242630;
+    --text:#e8e6f0;
+    --text-dim:#8b8a99;
+    --text-faint:#5b5a68;
+    --accent:#7c5cff;
+    --accent-dim: rgba(124,92,255,.14);
+    --accent2:#ff7b3d;
+    --success:#22d3a5;
+    --font-mono:'JetBrains Mono', ui-monospace, monospace;
+    --font-body:'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(circle at 1px 1px, var(--bg-grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:4px;}
+
+  .wrap{max-width:720px; margin:0 auto; padding:0 24px;}
+
+  /* ── Top bar ───────────────────────────────────────── */
+  header.top{
+    border-bottom:1px solid var(--border);
+    padding:18px 0;
+  }
+  .top .wrap{display:flex; align-items:center; justify-content:space-between;}
+  .brand{
+    font-family:var(--font-mono); font-weight:800; font-size:15px;
+    letter-spacing:.02em; display:flex; align-items:center; gap:8px;
+  }
+  .brand .dot{width:8px;height:8px;border-radius:2px;background:var(--accent); box-shadow:0 0 8px var(--accent); flex-shrink:0;}
+  nav.top-links{display:flex; gap:20px; font-family:var(--font-mono); font-size:13px; color:var(--text-dim);}
+  nav.top-links a{color:var(--text-dim);}
+  nav.top-links a:hover{color:var(--text);}
+
+  /* ── Hero ──────────────────────────────────────────── */
+  .hero{padding:72px 0 48px;}
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12.5px; color:var(--accent);
+    letter-spacing:.06em; margin-bottom:18px; display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{content:'$'; color:var(--text-faint);}
+  h1{
+    font-family:var(--font-mono); font-weight:800; font-size:44px;
+    line-height:1.12; letter-spacing:-.01em; margin-bottom:18px;
+  }
+  h1 span{color:var(--accent);}
+  .lede{font-size:17px; color:var(--text-dim); max-width:56ch; margin-bottom:32px;}
+
+  /* status readout — a small mock of the launcher's own server list UI */
+  .status-block{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; max-width:420px; font-family:var(--font-mono); font-size:12.5px;
+  }
+  .status-block .row{display:flex; align-items:center; justify-content:space-between; padding:6px 0;}
+  .status-block .row + .row{border-top:1px solid var(--border);}
+  .status-block .k{color:var(--text-dim); display:flex; align-items:center; gap:7px;}
+  .status-block .k .pip{width:6px;height:6px;border-radius:50%; background:var(--success); box-shadow:0 0 6px var(--success); flex-shrink:0;}
+  .status-block .v{color:var(--text); font-weight:500;}
+
+  /* ── Sections ──────────────────────────────────────── */
+  section{padding:40px 0; border-top:1px solid var(--border);}
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:20px;}
+  .sec-num{font-family:var(--font-mono); color:var(--text-faint); font-size:13px;}
+  h2{font-family:var(--font-mono); font-size:20px; font-weight:700;}
+  p{color:var(--text-dim); max-width:64ch;}
+  p + p{margin-top:12px;}
+  strong{color:var(--text); font-weight:600;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px;}
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px;
+  }
+  .card .card-title{font-weight:600; font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:8px;}
+  .card .card-title::before{content:'▸'; color:var(--accent); font-size:12px;}
+  .card p{font-size:13.5px; color:var(--text-dim); max-width:none;}
+
+  .note{
+    background:var(--accent-dim); border:1px solid rgba(124,92,255,.3);
+    border-radius:10px; padding:16px 18px; margin-top:20px;
+  }
+  .note p{color:var(--text); font-size:14px;}
+  .note p + p{margin-top:8px; color:var(--text-dim); font-size:13.5px;}
+
+  .taglist{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .tag{
+    font-family:var(--font-mono); font-size:11.5px; color:var(--text-dim);
+    border:1px solid var(--border); border-radius:6px; padding:4px 9px;
+  }
+
+  footer{padding:36px 0 56px; border-top:1px solid var(--border);}
+  footer p{font-size:13px; color:var(--text-faint);}
+  footer a{color:var(--text-dim);}
+
+  @media (max-width:600px){
+    h1{font-size:32px;}
+    .grid2{grid-template-columns:1fr;}
+    nav.top-links{gap:14px; font-size:12px;}
+  }
+</style>
+</head>
+<body>
+
+  <header class="top">
+    <div class="wrap">
+      <div class="brand"><span class="dot"></span>MCNet</div>
+      <nav class="top-links">
+        <a href="#about">about</a>
+        <a href="#scope">scope</a>
+        <a href="https://github.com/Techmeg-Rex" target="_blank" rel="noopener">github</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <section class="hero" style="border-top:none;">
+      <div class="eyebrow">mcnet --status</div>
+      <h1>A <span>private</span> Minecraft<br>launcher, built for one server.</h1>
+      <p class="lede">
+        MCNet is a custom launcher and companion Fabric mod, built and maintained
+        by a single developer for a small, private modded Minecraft community.
+        It's not a commercial product — it exists to make one group of friends'
+        server easier to install, update, and play on.
+      </p>
+
+      <div class="status-block">
+        <div class="row"><span class="k"><span class="pip"></span>project</span><span class="v">MCNet</span></div>
+        <div class="row"><span class="k"><span class="pip"></span>type</span><span class="v">private / non-commercial</span></div>
+        <div class="row"><span class="k"><span class="pip"></span>audience</span><span class="v">closed friend group</span></div>
+        <div class="row"><span class="k"><span class="pip"></span>maintainer</span><span class="v">1 (solo, hobby)</span></div>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="sec-head"><span class="sec-num">01</span><h2>What it is</h2></div>
+      <p>
+        MCNet pairs a desktop launcher with a lightweight Fabric mod so that
+        joining, installing, and updating modpacks for the server takes one
+        click instead of a manual folder-by-folder setup. It handles Microsoft
+        sign-in, modpack installation from Modrinth and CurseForge, automatic
+        backups, and switching between the server's different modpacks
+        without leaving the app.
+      </p>
+      <p>
+        It was built the way most small-community launchers are: because
+        walking friends through manual Java/mod setup got old, and a
+        one-click "just play" experience was worth building.
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">One-click installs</div>
+          <p>Fetches and installs the server's modpacks directly from Modrinth / CurseForge, no manual mod management.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Microsoft sign-in</div>
+          <p>Standard OAuth sign-in through Microsoft/Xbox — MCNet never sees or stores account passwords.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Multi-pack support</div>
+          <p>Switches between the server's different modpacks (survival, creative, tech-focused, etc.) from one launcher.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Self-contained</div>
+          <p>Backups, updates, and Java/runtime management are handled locally — no external account or profile system.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Scope &amp; who it's for</h2></div>
+      <p>
+        MCNet is used by a small, closed group of players on one private
+        Minecraft server. It is not distributed publicly, not monetized, and
+        not intended to scale beyond the community it was built for.
+      </p>
+
+      <div class="note">
+        <p>For anyone reviewing this as part of a Microsoft API / app registration request:</p>
+        <p>
+          MCNet uses the standard Microsoft identity OAuth flow purely to let
+          a player's existing Minecraft-linked Microsoft account sign in and
+          launch the game — the same purpose every third-party Minecraft
+          launcher uses it for. No credentials are handled or stored by
+          MCNet directly; authentication is delegated entirely to Microsoft.
+          The app has a small, fixed user base and no commercial component.
+        </p>
+      </div>
+
+      <div class="taglist">
+        <span class="tag">non-commercial</span>
+        <span class="tag">closed user base</span>
+        <span class="tag">no ads / tracking</span>
+        <span class="tag">OAuth via Microsoft</span>
+        <span class="tag">Electron desktop app</span>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <p>MCNet — maintained on <a href="https://github.com/Techmeg-Rex" target="_blank" rel="noopener">GitHub</a>. Questions about this project can be directed there.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
